@@ -11,9 +11,20 @@
 import csv
 import random
 
+def generate_dark_color_hex():
+    # Generate random RGB values in the range 0-127 (to produce darker colors)
+    red = random.randint(0, 127)
+    green = random.randint(0, 127)
+    blue = random.randint(0, 127)
+    # Convert RGB values to hexadecimal
+    color_hex = "{:02x}{:02x}{:02x}".format(red, green, blue)
+    #  color_hex = "#{:02x}{:02x}{:02x}".format(red, green, blue)
+    return color_hex
+
 def write_kml_polygon(output_file, coordinates):
     # set this file polys random color
-    color = "%06x" % random.randint(0, 0xFFFFFF)
+    #  color = "%06x" % random.randint(0, 0xFFFFFF)
+    color = generate_dark_color_hex()
     with open(output_file, "w") as f:
         # Write KML header
         f.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
