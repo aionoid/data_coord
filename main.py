@@ -1,5 +1,6 @@
 import typer
 
+import os
 import random
 import csv
 import utm
@@ -7,6 +8,7 @@ import pyproj
 from pyproj import Transformer
 
 app = typer.Typer()
+directory = "output"
 
 def convert_utm_to_wgs84(easting, northing):
     transformer = Transformer.from_crs("EPSG:30730", "EPSG:4326")  # Nord Sahara (EPSG:30791) to WGS84 (EPSG:4326)
@@ -89,7 +91,7 @@ def utm2dd(inf: str):
         #
     """
     input_file = f"{inf}.csv"
-    output_file = f"{inf}_dd.csv"
+    output_file = f"{directory}/{inf}_dd.csv"
     print(f"input '{input_file}', output '{output_file}'")
 
     with open(input_file, "r") as input_csv, open(output_file, "w", newline="") as output_csv:
@@ -182,6 +184,8 @@ def goodbye(name: str, formal: bool = False):
 
 
 if __name__ == "__main__":
+    if not os.path.exists(directory):
+        os.makedirs(directory)
     app()
 
 
