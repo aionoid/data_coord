@@ -1,5 +1,7 @@
-import typer
+# TODO: add function to Split csv file based on a "location/Region" column
+# TODO: change kml to split "Region" to folders or Files
 
+import typer
 import os
 import random
 import csv
@@ -87,7 +89,7 @@ def utm2dd(inf: str):
         #  ID,wgs84,448251.7103,5463888.924,12,S
         #  ID,ns,447721.7991,5461517.686,12,S
         # Output//
-        # ID,"Latitude", "Longitude","utm-type"
+        # ID,"Latitude", "Longitude","utm-type","Location"
         #
     """
     input_file = f"{inf}.csv"
@@ -188,6 +190,3 @@ if __name__ == "__main__":
         os.makedirs(directory)
     app()
 
-
-#  input_file = "data_utm_wgs84_poly.csv"
-#  output_file = "output/data_dd.csv"
