@@ -2,6 +2,8 @@
 # TODO: change kml to split "Region" to folders or Files
 
 import typer
+from rich.console import Console
+from rich.table import Table
 import os
 import random
 import csv
@@ -10,6 +12,8 @@ import pyproj
 from pyproj import Transformer
 
 app = typer.Typer()
+console = Console()
+
 directory = "output"
 
 def convert_utm_to_wgs84(easting, northing):
@@ -80,16 +84,43 @@ def write_kml_polygon(output_file, coordinates):
         f.write("</kml>\n")
 
 @app.command()
+def utm2dd_form():
+    """
+    utm 2 dd table form
+    """
+    console.print("input csv format")
+    tablein = Table("ID","UTM Type","Easting","Northing","Zone Number","Zone Letter")
+    tablein.add_row("id_name_project_01","wgs84","448251.7103","5463888.924","30","R")
+    tablein.add_row("id_name_project_02","ns","448251.7103","5463888.924","30","R")
+    console.print(tablein)
+    console.print("output csv format")
+    tableout = Table("ID","Latitude", "Longitude","utm-type","Location")
+    tableout.add_row("id_name_project_01","27.25156458","-0.2514588","WGS84","tinilan-w")
+    tableout.add_row("id_name_project_02","27.69854712","-0.2564847","ns","tinilan-e")
+    console.print(tableout)
+    
+
+@app.command()
+def csv2kml_form():
+    """
+    csv 2 kml table form
+    """
+    console.print("input csv format")
+    tablein = Table("ID","Latitude", "Longitude")
+    tablein.add_row("id_name_project_01","27.25156458","-0.2514588")
+    tablein.add_row("id_name_project_02","27.25156458","-0.2514588")
+    console.print(tablein)
+
+@app.command()
 def utm2dd(inf: str):
     """
         #  Python program that reads in a CSV file containing UTM coordinates and converts them to decimal degrees
-
-        # Here's an example input CSV file:
+        #  Here's an example input CSV file:
         #  UTM Type,Easting,Northing,Zone Number,Zone Letter
         #  ID,wgs84,448251.7103,5463888.924,12,S
         #  ID,ns,447721.7991,5461517.686,12,S
-        # Output//
-        # ID,"Latitude", "Longitude","utm-type","Location"
+        #  Output//
+        #  ID,"Latitude", "Longitude","utm-type","Location"
         #
     """
     input_file = f"{inf}.csv"
@@ -133,8 +164,7 @@ def csv2kml(inf: str):
         #  Python program that reads in a CSV file containing latitude, longitude,
         #  and name information for multiple points that form a polygon, and outputs
         #  a KML file containing the polygon that can be opened in Google Earth:
-
-        # csv format 
+        #  input csv format 
         #  ID,Latitude,Longitude
         #  b store,51.019305,-114.053946
         #  b store,51.019396,-114.053688
