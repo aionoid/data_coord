@@ -1,15 +1,17 @@
 # TODO: add function to Split csv file based on a "location/Region" column
 # TODO: change kml to split "Region" to folders or Files
 
-import typer
-from rich.console import Console
-from rich.table import Table
 import os
 import random
 import csv
 import utm
+import typer
 import pyproj
+import pandas as pd
+from rich.console import Console
+from rich.table import Table
 from pyproj import Transformer
+from typing_extensions import Annotated
 
 app = typer.Typer()
 console = Console()
@@ -112,9 +114,22 @@ def csv2kml_form():
     console.print(tablein)
 
 @app.command()
+def splitter_form():
+    """
+    splitter table form
+    """
+    console.print("input csv format")
+    tablein = Table("id_name_project","owner name","project name","project in latin","category","Location","municipal","the state","The area granted m2","state of project","state of file","color","Latitude", "Longitude")
+    tablein.add_row("id_name_project_01","","")
+    tablein.add_row("id_name_project_02","...","...")
+    console.print(tablein)
+
+@app.command()
 def utm2dd(inf: str):
     """
-        #  Python program that reads in a CSV file containing UTM coordinates and converts them to decimal degrees
+        reads in a CSV file containing UTM coordinates and converts them to decimal degrees
+        check utm2dd-form for input csv format
+
         #  Here's an example input CSV file:
         #  UTM Type,Easting,Northing,Zone Number,Zone Letter
         #  ID,wgs84,448251.7103,5463888.924,12,S
@@ -161,7 +176,10 @@ def utm2dd(inf: str):
 @app.command()
 def csv2kml(inf: str):
     """
-        #  Python program that reads in a CSV file containing latitude, longitude,
+        reads in a CSV file containing latitude, longitude, and outputs a KML file containing the polygon.
+        check csv2kml-form for csv format
+
+        #  reads in a CSV file containing latitude, longitude,
         #  and name information for multiple points that form a polygon, and outputs
         #  a KML file containing the polygon that can be opened in Google Earth:
         #  input csv format 
@@ -207,12 +225,30 @@ def csv2kml(inf: str):
 
     write_kml_polygon(output_file, coordinates)
 
+
 @app.command()
-def goodbye(name: str, formal: bool = False):
-    if formal:
-        print(f"Goodbye Ms. {name}. Have a good day.")
-    else:
-        print(f"Bye {name}!")
+def splitter(data: Annotated[str, typer.Argument(help="location to csv data file")]):
+    """
+    split data by Location with non null coordinates
+    """
+    # read the large csv file into a pandas dataframe
+    df = pd.read_csv(data)
+
+    column_name = "Location"
+    # get the unique values of the column you want to split the data by
+    column_values = df[column_name].unique()
+
+    # loop over the unique values of the column
+    for value in column_values:
+        # create a dataframe for each unique value
+        value_df = df[df[column_name] == value]
+        # remove ID column
+        value_df = value_df.drop(columns=['id_name_project'])
+        new_df = value_df.dropna(subset=['Latitude'])
+
+        # write the dataframe to a new csv file
+        #  value_df.to_csv(f'{column_name}_{value}.csv', index=False)
+        new_df.to_csv(f'output/{column_name}_{value}_nonull.csv', index=False)
 
 
 if __name__ == "__main__":
