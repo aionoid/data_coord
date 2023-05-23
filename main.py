@@ -1,4 +1,3 @@
-# TODO: add function to Split csv file based on a "location/Region" column
 # TODO: change kml to split "Region" to folders or Files
 
 import os
@@ -50,6 +49,10 @@ def write_kml_polygon(output_file, coordinates):
         style = f"<Style id=\"msn_ylw-pushpin44\"><LineStyle><color>ff{color}</color><width>3.2</width></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>\n"
         f.write(style)
         #  f.write("<Style id=\"msn_ylw-pushpin44\"><LineStyle><color>ff00ffff</color><width>3.2</width></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>\n")
+
+        #  f.write("<Folder><name>{}</name>\n".format("__LOCATION__FOLDER__NAME__"))
+        #  # data inside for location
+        #  f.write("</Folder>\n")
 
         for i, coords in enumerate(coordinates):
             # set diffrent color for each poly
@@ -250,9 +253,17 @@ def splitter(data: Annotated[str, typer.Argument(help="location to csv data file
         #  value_df.to_csv(f'{column_name}_{value}.csv', index=False)
         new_df.to_csv(f'output/{column_name}_{value}_nonull.csv', index=False)
 
+def copyrights():
+    """
+    print devloper and version 
+    """
+    tablein = Table("devloper","version")
+    tablein.add_row("B. Yacoub","1.0.1")
+    console.print(tablein)
 
 if __name__ == "__main__":
     if not os.path.exists(directory):
         os.makedirs(directory)
+    copyrights()
     app()
 
