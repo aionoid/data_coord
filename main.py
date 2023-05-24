@@ -253,6 +253,103 @@ def splitter(data: Annotated[str, typer.Argument(help="location to csv data file
         #  value_df.to_csv(f'{column_name}_{value}.csv', index=False)
         new_df.to_csv(f'output/{column_name}_{value}_nonull.csv', index=False)
 
+def newkml_(data: str):
+    # read the large csv file into a pandas dataframe
+    df = pd.read_csv(data)
+
+    column_name_location = "Location"
+    column_name_id = "ID"
+    # get the unique values of the column you want to split the data by
+    location_values = df[column_name_location].unique()
+
+    # loop over the unique values of the column
+    for value in location_values:
+        print("LOCAITON {}".format(value))
+        # create a dataframe for each unique value
+        location_df = df[df[column_name_location] == value]
+        # drop empty "Latitude" value
+        location_df = location_df.dropna(subset=['Latitude'])
+        # get unique value for id on location_dataframe
+        id_name_values = location_df[column_name_id].unique()
+        for id_name in id_name_values:
+            print("ID {}".format(id_name))
+            # create a dataframe for each name_id
+            id_name_df = df[df[column_name_id] == id_name ]
+            for ind in id_name_df.index:
+                 print(df['Latitude'][ind], df['Longitude'][ind])
+
+
+@app.command()
+def newkml(data: str):
+    # read the large csv file into a pandas dataframe
+    df = pd.read_csv(data)
+
+    column_name_location = "Location"
+    column_name_id = "ID"
+    # get the unique values of the column you want to split the data by
+    location_values = df[column_name_location].unique()
+
+    # set this file polys random color
+    #  color = "%06x" % random.randint(0, 0xFFFFFF)
+    color = generate_dark_color_hex()
+    output_file = f"{data}_kml.kml"
+    with open(output_file, "w") as f:
+        # Write KML header
+        f.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+        f.write("<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n")
+        f.write("<Document>\n")
+        #  style = f"<Style id=\"msn_ylw-pushpin44\"><LineStyle><color>ff{color}</color><width>3.2</width></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>\n"
+        #  f.write(style)
+
+        # loop over the unique values of the column
+        for value in location_values:
+            color = generate_dark_color_hex()
+            f.write(f"<StyleMap id=\"m_ylw-pushpin{color}\"> <Pair> <key>normal</key> <styleUrl>#s_ylw-pushpin{color}</styleUrl> </Pair> <Pair> <key>highlight</key> <styleUrl>#s_ylw-pushpin_hl{color}</styleUrl> </Pair> </StyleMap> <Style id=\"s_ylw-pushpin{color}\"> <LineStyle> <color>ff{color}</color><width>3.2</width> </LineStyle> <PolyStyle> <color>4d{color}</color> </PolyStyle> </Style> <Style id=\"s_ylw-pushpin_hl{color}\"> <LineStyle><width>3.2</width> <color>ff{color}</color> </LineStyle> <PolyStyle> <color>4d{color}</color> </PolyStyle> </Style>")
+            f.write("<Folder><name>{}</name>\n".format(value))
+            # Write KML polygon
+            # data inside for location
+            print("LOCAITON {}".format(value))
+            # create a dataframe for each unique value
+            location_df = df[df[column_name_location] == value]
+            # drop empty "Latitude" value
+            location_df = location_df.dropna(subset=['Latitude'])
+            # get unique value for id on location_dataframe
+            id_name_values = location_df[column_name_id].unique()
+            for id_name in id_name_values:
+                print("ID {}".format(id_name))
+                # create a dataframe for each name_id
+                id_name_df = df[df[column_name_id] == id_name ]
+                f.write("<Placemark>\n")
+                f.write("<name>{}</name>\n".format(id_name))
+                f.write(f"<styleUrl>#m_ylw-pushpin{color}</styleUrl>\n")
+                #  style = f"<Style><LineStyle><color>ff{color}</color><width>3.2</width></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>\n"
+                #  f.write(style)
+                f.write("<Polygon>\n")
+                f.write("<outerBoundaryIs>\n")
+                f.write("<LinearRing>\n")
+                f.write("<coordinates>\n")
+                for ind in id_name_df.index:
+                    lat = id_name_df['Latitude'][ind]
+                    lon = id_name_df['Longitude'][ind]
+                    print(df['Latitude'][ind], df['Longitude'][ind],ind)
+                    f.write("{},{},0\n".format(lon, lat))
+                # Write the first coordinate again to close the polygon
+                first_coord = id_name_df.index[0]
+                lat = df['Latitude'][first_coord]
+                lon = df['Longitude'][first_coord]
+                f.write("{},{},0\n".format(lon, lat))
+                # Finish writing the KML polygon
+                f.write("</coordinates>\n")
+                f.write("</LinearRing>\n")
+                f.write("</outerBoundaryIs>\n")
+                f.write("</Polygon>\n")
+                f.write("</Placemark>\n")
+            # close folder
+            f.write("</Folder>\n")
+        # Write KML footer
+        f.write("</Document>\n")
+        f.write("</kml>\n")
+
 def copyrights():
     """
     print devloper and version 
