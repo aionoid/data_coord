@@ -2,11 +2,13 @@
 
 import os
 import random
+import copy
 import csv
 import utm
 import typer
 import pyproj
 import pandas as pd
+import simplekml as sk
 from rich.console import Console
 from rich.table import Table
 from pyproj import Transformer
@@ -164,7 +166,7 @@ def utm2dd(inf: str):
             zone_number = int(row[4])
             zone_letter = row[5]
             location = row[8]
-            name = row[0]
+            name = row[12]
 
             if utm_type == "wgs84" :
                 # Convert WGS84 UTM to decimal degrees
@@ -251,7 +253,100 @@ def splitter(data: Annotated[str, typer.Argument(help="location to csv data file
 
         # write the dataframe to a new csv file
         #  value_df.to_csv(f'{column_name}_{value}.csv', index=False)
-        new_df.to_csv(f'output/{column_name}_{value}_nonull.csv', index=False)
+        #  new_df.to_csv(f'output/{column_name}_{value}_nonull.csv', index=False)
+        new_df.to_csv(f'output/{value}.csv', index=False)
+
+@app.command()
+def csv2pins(data: Annotated[str, typer.Argument(help="location to csv data file")]):
+    """
+    read csv file to pins in google earth kml file
+    """
+    # TEMP create styles
+    
+    style1 = sk.Style() #creates shared style for all points
+    style1.iconstyle.color = sk.Color.red #lime green
+    style1.iconstyle.icon.href ='http://maps.google.com/mapfiles/kml/paddle/wht-circle.png'
+    style1.iconstyle.scale = 1
+    style1.labelstyle.scale = 1
+    style1.balloonstyle.bgcolor = sk.Color.darkred
+    style1.balloonstyle.textcolor = sk.Color.white
+
+    #  style2 = copy.copy(style1) #creates shared style for all points
+    style2 = sk.Style() #creates shared style for all points
+    style2.iconstyle.icon.href ='http://maps.google.com/mapfiles/kml/paddle/wht-circle.png'
+    style2.iconstyle.color = sk.Color.yellow 
+    style2.balloonstyle.bgcolor = sk.Color.goldenrod
+    style2.balloonstyle.textcolor = sk.Color.black
+
+    #  style3 = copy.copy(style1)
+    style3 = sk.Style() #creates shared style for all points
+    style3.iconstyle.icon.href ='http://maps.google.com/mapfiles/kml/paddle/wht-circle.png'
+    style3.iconstyle.color = sk.Color.blue 
+    style3.balloonstyle.bgcolor = sk.Color.darkblue
+    style3.balloonstyle.textcolor = sk.Color.white
+
+    #  style4 =copy.copy(style1)
+    style4 = sk.Style() #creates shared style for all points
+    style4.iconstyle.icon.href ='http://maps.google.com/mapfiles/kml/paddle/wht-circle.png'
+    style4.iconstyle.color = sk.Color.green
+    style4.balloonstyle.bgcolor = sk.Color.darkgreen
+    style4.balloonstyle.textcolor = sk.Color.white
+
+    #  style5 = copy.deepcopy(style1)
+    style5 = sk.Style() #creates shared style for all points
+    style5.iconstyle.icon.href ='http://maps.google.com/mapfiles/kml/paddle/wht-circle.png'
+    style5.iconstyle.color = sk.Color.orange
+    style5.balloonstyle.bgcolor = sk.Color.orangered
+    style5.balloonstyle.textcolor = sk.Color.white
+    ############
+    # create kml
+    kml = sk.Kml(name="Adrar", open=1)
+    # read the large csv file into a pandas dataframe
+    df = pd.read_csv(data)
+
+    column_name = "Location"
+    # get the unique values of the column you want to split the data by
+    column_values = df[column_name].unique()
+
+    # loop over the unique values of the column
+    for value in column_values:
+        # create a dataframe for each unique value
+        value_df = df[df[column_name] == value]
+        # remove ID column
+        value_df = value_df.drop(columns=['id_name_project'])
+        new_df = value_df.dropna(subset=['Latitude'])
+        new_df = new_df.reset_index()  # make sure indexes pair with number of rows
+        if new_df.empty:
+            #  print(f'location {value} is empty')
+            pass
+        else:
+            # create folder for kml
+            fol = kml.newfolder(name=value)
+            for index, row in new_df.iterrows():
+                pnt = fol.newpoint(name=row["owner name"], coords =[(row["Longitude"],row["Latitude"])])
+                for h in new_df.head():
+                    if h == "color":
+                        if row['color'] == 1:
+                            pnt.style = style1
+                            #  print("style 1")
+                        elif row['color'] == 2:
+                            pnt.style = style2
+                            #  print("style 2")
+                        elif row['color'] == 3:
+                            pnt.style = style3
+                            #  print("style 3")
+                        elif row['color'] == 4:
+                            pnt.style = style4
+                            #  print("style 4")
+                        elif row['color'] == 5:
+                            pnt.style = style5
+                            #  print("style 5")
+                    elif h in ["index","Longitude","Latitude"]:
+                        #  print(row["index"])
+                        pass
+                    else:
+                        pnt.extendeddata.newdata(name=h, value=row[h], displayname=h)
+    kml.save("adrar.kml")
 
 def newkml_(data: str):
     # read the large csv file into a pandas dataframe

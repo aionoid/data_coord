@@ -8,6 +8,7 @@ utm = "*"
 typer = {extras = ["all"], version = "*"}
 pyproj = "*"
 pandas = "*"
+simplekml = "*"
 
 [dev-packages]
 pynvim = "*"
