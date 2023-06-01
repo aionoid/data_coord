@@ -461,7 +461,7 @@ def copyrights():
     print devloper and version 
     """
     tablein = Table("devloper","version")
-    tablein.add_row("B. Yacoub","1.2.0")
+    tablein.add_row("B. Yacoub","1.3.0")
     console.print(tablein)
 
 if __name__ == "__main__":
