@@ -301,6 +301,17 @@ def csv2pins(data: Annotated[str, typer.Argument(help="location to csv data file
     ############
     # create kml
     kml = sk.Kml(name="Adrar", open=1)
+    # add Legend ####
+    screen = kml.newscreenoverlay(name='Legend')
+    #  screen.icon.href = 'http://simplekml.googlecode.com/hg/samples/resources/simplekml-logo.png'
+    screen.icon.href = 'https://i.postimg.cc/L5N7tQ6t/map-legend.png'
+    screen.overlayxy = OverlayXY(x=0,y=1,xunits=Units.fraction,yunits=Units.fraction)
+    screen.screenxy = ScreenXY(x=15,y=15,xunits=Units.pixels,yunits=Units.insetpixels)
+    screen.size.x = 200
+    screen.size.y = 300
+    screen.size.xunits = Units.pixels
+    screen.size.yunits = Units.pixels
+
     # read the large csv file into a pandas dataframe
     df = pd.read_csv(data)
 
