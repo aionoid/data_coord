@@ -359,15 +359,18 @@ def csv2pins(data: Annotated[str, typer.Argument(help="location to csv data file
                         pnt.extendeddata.newdata(name=h, value=row[h], displayname=h)
     kml.save("adrar.kml")
 
-def newkml_(data: str):
+@app.command()
+def skml(data: str):
     # read the large csv file into a pandas dataframe
     df = pd.read_csv(data)
 
-    column_name_location = "Location"
-    column_name_id = "ID"
+    column_name_location = "location"
+    column_name_id = "ID_name_proj"
+    name = "ID"
     # get the unique values of the column you want to split the data by
     location_values = df[column_name_location].unique()
 
+    kml = sk.Kml()
     # loop over the unique values of the column
     for value in location_values:
         print("LOCAITON {}".format(value))
@@ -381,8 +384,23 @@ def newkml_(data: str):
             print("ID {}".format(id_name))
             # create a dataframe for each name_id
             id_name_df = df[df[column_name_id] == id_name ]
+            id_name_df = id_name_df.reset_index()  # make sure indexes pair with number of rows
+            # empty list for coords
+            l = []
+            # polygon style
+            pol = kml.newpolygon(name=id_name_df['ID'][0])
+            pol.style.linestyle.color = sk.Color.green
+            pol.style.linestyle.width = 5
+            pol.style.polystyle.color = sk.Color.changealphaint(100, sk.Color.green)
+
             for ind in id_name_df.index:
-                 print(df['Latitude'][ind], df['Longitude'][ind])
+                 print(id_name_df['Latitude'][ind], id_name_df['Longitude'][ind])
+                 l.append((id_name_df['Longitude'][ind],id_name_df['Latitude'][ind]))
+            # append 1st coords to close polygon
+            l.append((id_name_df['Longitude'][0],id_name_df['Latitude'][0]))
+            # create poly with coords
+            pol.outerboundaryis = l
+        kml.save("adrar_poly.kml")
 
 
 @app.command()
@@ -390,7 +408,7 @@ def newkml(data: str):
     # read the large csv file into a pandas dataframe
     df = pd.read_csv(data)
 
-    column_name_location = "Location"
+    column_name_location = "location"
     column_name_id = "ID"
     # get the unique values of the column you want to split the data by
     location_values = df[column_name_location].unique()
