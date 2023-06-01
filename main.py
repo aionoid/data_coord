@@ -305,24 +305,36 @@ def csv2pins(data: Annotated[str, typer.Argument(help="location to csv data file
     screen = kml.newscreenoverlay(name='Legend')
     #  screen.icon.href = 'http://simplekml.googlecode.com/hg/samples/resources/simplekml-logo.png'
     screen.icon.href = 'https://i.postimg.cc/L5N7tQ6t/map-legend.png'
-    screen.overlayxy = OverlayXY(x=0,y=1,xunits=Units.fraction,yunits=Units.fraction)
-    screen.screenxy = ScreenXY(x=15,y=15,xunits=Units.pixels,yunits=Units.insetpixels)
+    screen.overlayxy = sk.OverlayXY(x=0,y=1,xunits=sk.Units.fraction,yunits=sk.Units.fraction)
+    screen.screenxy = sk.ScreenXY(x=15,y=15,xunits=sk.Units.pixels,yunits=sk.Units.insetpixels)
     screen.size.x = 200
     screen.size.y = 300
-    screen.size.xunits = Units.pixels
-    screen.size.yunits = Units.pixels
+    screen.size.xunits = sk.Units.pixels
+    screen.size.yunits = sk.Units.pixels
 
-    # read the large csv file into a pandas dataframe
+    # read data.csv
     df = pd.read_csv(data)
+    # read data_utm.csv file
+    data_utm = "data_utm.csv"
+    utmdf = pd.read_csv(data_utm)
+
+    utm_column_name_location = "location"
+    utm_column_name_id = "ID_name_proj"
+    utm_name = "ID"
 
     column_name = "Location"
     # get the unique values of the column you want to split the data by
     column_values = df[column_name].unique()
 
     # loop over the unique values of the column
-    for value in column_values:
+    for value in column_values: # loop over location value
+        # get a random color
+        color = generate_dark_color_hex()
         # create a dataframe for each unique value
         value_df = df[df[column_name] == value]
+        utm_location_df = utmdf[utmdf[utm_column_name_location] == value]
+        utm_location_df = utm_location_df.dropna(subset=['Latitude'])
+        utm_id_name_values = utm_location_df[utm_column_name_id].unique()
         # remove ID column
         value_df = value_df.drop(columns=['id_name_project'])
         new_df = value_df.dropna(subset=['Latitude'])
@@ -333,6 +345,9 @@ def csv2pins(data: Annotated[str, typer.Argument(help="location to csv data file
         else:
             # create folder for kml
             fol = kml.newfolder(name=value)
+            #  fol.style.iconstyle.color = f"ff{color}"
+            fol.style.liststyle.bgcolor = f"99{color}"
+            # PINS PART
             for index, row in new_df.iterrows():
                 pnt = fol.newpoint(name=row["owner name"], coords =[(row["Longitude"],row["Latitude"])])
                 for h in new_df.head():
@@ -357,25 +372,49 @@ def csv2pins(data: Annotated[str, typer.Argument(help="location to csv data file
                         pass
                     else:
                         pnt.extendeddata.newdata(name=h, value=row[h], displayname=h)
+            # POLYGON PART
+            for id_name in utm_id_name_values:
+                print("ID {}".format(id_name))
+                # create a dataframe for each name_id
+                id_name_df = utmdf[utmdf[utm_column_name_id] == id_name ]
+                id_name_df = id_name_df.reset_index()  # make sure indexes pair with number of rows
+                # empty list for coords
+                l = []
+                # polygon style
+                pol = fol.newpolygon(name=id_name_df['ID'][0]) # get ID for naming polygon
+                #  pol.style.linestyle.color = sk.Color.azure
+                pol.style.linestyle.color = f"ff{color}"
+                pol.style.linestyle.width = 5
+                #  pol.style.polystyle.color = sk.Color.changealphaint(100, sk.Color.green)
+                pol.style.polystyle.color = sk.Color.changealphaint(100, f"ff{color}")
+
+                for ind in id_name_df.index:
+                     print(id_name_df['Latitude'][ind], id_name_df['Longitude'][ind])
+                     l.append((id_name_df['Longitude'][ind],id_name_df['Latitude'][ind]))
+                # append 1st coords to close polygon
+                l.append((id_name_df['Longitude'][0],id_name_df['Latitude'][0]))
+                # create poly with coords
+                pol.outerboundaryis = l
+
     kml.save("adrar.kml")
 
 @app.command()
 def skml(data: str):
-    # read the large csv file into a pandas dataframe
-    df = pd.read_csv(data)
+    # read data_utm.csv file
+    utmdf = pd.read_csv(data)
 
     column_name_location = "location"
     column_name_id = "ID_name_proj"
     name = "ID"
     # get the unique values of the column you want to split the data by
-    location_values = df[column_name_location].unique()
+    location_values = utmdf[column_name_location].unique()
 
     kml = sk.Kml()
     # loop over the unique values of the column
     for value in location_values:
         print("LOCAITON {}".format(value))
         # create a dataframe for each unique value
-        location_df = df[df[column_name_location] == value]
+        location_df = utmdf[utmdf[column_name_location] == value]
         # drop empty "Latitude" value
         location_df = location_df.dropna(subset=['Latitude'])
         # get unique value for id on location_dataframe
@@ -383,13 +422,13 @@ def skml(data: str):
         for id_name in id_name_values:
             print("ID {}".format(id_name))
             # create a dataframe for each name_id
-            id_name_df = df[df[column_name_id] == id_name ]
+            id_name_df = utmdf[utmdf[column_name_id] == id_name ]
             id_name_df = id_name_df.reset_index()  # make sure indexes pair with number of rows
             # empty list for coords
             l = []
             # polygon style
-            pol = kml.newpolygon(name=id_name_df['ID'][0])
-            pol.style.linestyle.color = sk.Color.green
+            pol = kml.newpolygon(name=id_name_df['ID'][0]) # get ID for naming polygon
+            pol.style.linestyle.color = sk.Color.aqua
             pol.style.linestyle.width = 5
             pol.style.polystyle.color = sk.Color.changealphaint(100, sk.Color.green)
 
