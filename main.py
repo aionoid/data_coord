@@ -19,8 +19,9 @@ console = Console()
 
 directory = "output"
 
-def convert_utm_to_wgs84(easting, northing):
-    transformer = Transformer.from_crs("EPSG:30730", "EPSG:4326")  # Nord Sahara (EPSG:30791) to WGS84 (EPSG:4326)
+def convert_utm_to_wgs84(easting, northing,zone_number):
+    # convert ns 30 only
+    transformer = Transformer.from_crs(f"EPSG:307{zone_number}", "EPSG:4326")  # Nord Sahara (EPSG:30791) to WGS84 (EPSG:4326)
     lon, lat = transformer.transform( easting, northing)
     return lat, lon
 
@@ -173,7 +174,7 @@ def utm2dd(inf: str):
                 lat, lon = convert_utm_to_dd(utm_easting, utm_northing, zone_number, zone_letter)
             else:
                 # Convert Nord Sahara UTM Zone 30N coordinates to WGS84 (EPSG:4326)
-                lon, lat = convert_utm_to_wgs84(utm_easting, utm_northing)
+                lon, lat = convert_utm_to_wgs84(utm_easting, utm_northing,zone_number)
 
             # Write decimal degrees to output CSV
             writer.writerow([name,lat, lon,utm_type,location])
